@@ -1,4 +1,4 @@
-# Funky Smugglers Vita
+# Anomaly Warzone Earth HD Vita
 
 <p align="center"><img src="./screenshots/game.png"></p>
 
