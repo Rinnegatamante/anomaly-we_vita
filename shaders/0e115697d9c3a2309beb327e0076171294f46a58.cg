@@ -1,0 +1,86 @@
+// profile sce_fp_psp2
+
+#define _ANDROID
+#define DESATURATED_IN_ALPHA
+#define DIFFUSE_TEXTURE
+#define FOG
+#define TEXTURE_GAMMA_2
+
+
+#ifdef DIFFUSE_TEXTURE
+	uniform sampler2D Texture0;
+#endif
+#ifdef PLANAR_LIGHTMAP
+		uniform sampler2D Texture6;
+#endif
+#ifdef ENV_MAP
+		uniform samplerCUBE Texture3;
+#endif
+
+uniform sampler2D Texture4;
+// Cloud texture
+uniform float4 CloudColor;
+#ifdef FOG
+	uniform float4 FogColor;
+	#ifdef ENV_MAP
+			#endif
+	#endif
+#ifdef DESATURATION
+	uniform float4 MiscMeshParams[2];
+#endif
+
+
+float4 main(float3 colorVarying : COLOR, float2 uv0Varying : TEXCOORD0, float2 shadowMapUVVarying : TEXCOORD5, float3 reflectedVector : TEXCOORD4, float3 fogA : TEXCOORD6, float3 fogB : TEXCOORD7) {
+	float4 gl_FragColor;
+
+	float3 color=colorVarying;
+
+#ifdef PLANAR_LIGHTMAP
+	float3 shadowMap=tex2D(Texture6,shadowMapUVVarying).xyz;
+	color*=shadowMap;
+#endif
+
+#ifdef ENV_MAP
+	float4 envMap=texCUBE(Texture3,reflectedVector);
+#endif
+
+#ifdef DIFFUSE_TEXTURE
+	float4 txt=tex2D(Texture0,uv0Varying);
+
+	#ifdef DESATURATION
+		#ifdef DESATURATED_IN_ALPHA
+			float3 lum3=float3(txt.w,txt.w,txt.w)*MiscMeshParams[0].w;
+		#else
+			float lum=dot(txt.xyz,MiscMeshParams[1].xyz);
+			float3 lum3=float3(lum,lum,lum);
+		#endif
+		txt.xyz=txt.xyz*MiscMeshParams[0].xyz+lum3;
+	#endif
+
+	#ifdef TEXTURE_GAMMA_2
+		txt.xyz*=txt.xyz;
+	#endif
+#else
+	float4 txt=float4(1,1,1,1);
+#endif
+
+#if defined(ENV_MAP) && !defined(ENV_MAP_ADDITIVE)
+	txt.xyz=lerp(txt.xyz,envMap.xyz,envMap.w*txt.w);
+#endif
+	color*=txt.xyz;
+
+#if defined(ENV_MAP) && defined(ENV_MAP_ADDITIVE)
+	color.xyz+=envMap.xyz*txt.w;
+#endif
+
+#ifdef FOG
+	#ifndef ENV_MAP
+		color+=fogB;
+	#else
+		color=color*fogA+fogB;
+	#endif
+#endif
+	gl_FragColor=float4(color,1);
+
+	return gl_FragColor;
+}

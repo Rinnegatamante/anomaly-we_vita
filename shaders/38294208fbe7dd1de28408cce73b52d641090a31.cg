@@ -1,0 +1,48 @@
+// profile sce_vp_psp2
+
+#define _ANDROID
+
+
+#ifdef ZOOM_BLUR
+				#else
+	#endif
+
+uniform float4x4 ModelViewProjMatrix;
+uniform float4 UserVSHParams[3];
+
+void main(
+	float3 Position,
+#ifdef ZOOM_BLUR
+	float4 out uv0Varying : TEXCOORD0,
+	float4 out uv1Varying : TEXCOORD1,
+	float4 out uv2Varying : TEXCOORD2,
+	float4 out uv3Varying : TEXCOORD3,
+#else
+	float2 out uv0Varying : TEXCOORD0,
+#endif
+	float3 out screenColorVarying : COLOR,
+	float4 out gl_Position : POSITION
+) {
+	float3 pos=Position;
+	gl_Position=mul(float4(pos,1),ModelViewProjMatrix);
+
+	float2 uv=gl_Position.xy*float2(0.5,0.5)+float2(0.5,0.5);
+#ifdef ZOOM_BLUR
+    float4 zoomStrength   = UserVSHParams[2];
+
+	uv0Varying.xy=uv;
+	float2 offset2 = ( 2. * uv0Varying.xy - 1. ) * zoomStrength.x;
+	float4 offset4 = float4(offset2,offset2)*2.0;
+	uv0Varying.zw = uv0Varying.xy+offset2;
+
+	uv1Varying=uv0Varying+offset4;
+	uv2Varying=uv1Varying+offset4;
+	uv3Varying=uv2Varying+offset4;
+#else
+	uv0Varying=uv;
+#endif
+
+	float4 sc=lerp(UserVSHParams[0],UserVSHParams[1],(pos.x*0.5+0.5));
+	float3 color=lerp(float3(1.0,1.0,1.0),sc.xyz,sc.w);
+	screenColorVarying=color;
+}

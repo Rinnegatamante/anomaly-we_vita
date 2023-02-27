@@ -1,0 +1,58 @@
+// profile sce_vp_psp2
+
+#define _ANDROID
+#define SOFTNESS
+#define TEXTURE
+
+
+#ifdef TEXTURE
+	#endif
+
+#ifdef TEXTURE
+	#endif
+
+uniform float4x4 ModelViewProjMatrix;
+uniform float4 ConstantColor;
+uniform float4 MappingScale;
+uniform float4 MappingOffset;
+
+#ifdef DENORMALIZATION
+	uniform float4 VertexDenormalizationBox[2];
+#endif
+
+#ifdef SKINNING
+
+uniform float4 BoneMatrices[3*16];
+
+#endif
+
+void main(
+	float3 Position,
+	float2 UV0,
+	float4 BlendWeight,
+	float4 BlendIndices,
+	float4 out colorVarying : COLOR,
+	float4 out uv0Varying : TEXCOORD0,
+	float4 out gl_Position : POSITION
+) {
+#ifdef DENORMALIZATION
+	float3 pos=VertexDenormalizationBox[0].xyz+Position*VertexDenormalizationBox[1].xyz;
+#else
+	float3 pos=Position;
+#endif
+
+#ifdef SKINNING
+	ifloat4 bix=ifloat4(BlendIndices);
+	float4 pos4In=float4(pos,1.0);
+
+	float4 va=BoneMatrices[bix.x], vb=BoneMatrices[bix.x+1], vc=BoneMatrices[bix.x+2];
+//	float4 va=BoneMatrices[bix.x]*BlendWeight.x, vb=BoneMatrices[bix.x+1]*BlendWeight.x, vc=BoneMatrices[bix.x+2]*BlendWeight.x;
+	pos=float3(dot(pos4In,va),dot(pos4In,vb),dot(pos4In,vc));
+#endif
+
+    gl_Position = mul(float4(pos,1),ModelViewProjMatrix);
+    colorVarying = ConstantColor;
+#ifdef TEXTURE
+	uv0Varying = float4(UV0,UV0)*MappingScale+MappingOffset;
+#endif
+}

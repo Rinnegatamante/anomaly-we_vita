@@ -1,0 +1,21 @@
+#define _ANDROID
+
+uniform sampler2D Texture0;
+uniform float4 UserPSHParams[ 1 ];
+
+float4 main(
+	float4 uv0Varying : TEXCOORD0,
+	float4 uv1Varying : TEXCOORD1
+) {
+    float4 threshold = UserPSHParams[0];
+	
+	float4 c0=tex2D(Texture0,uv0Varying.xy);
+	float4 c1=tex2D(Texture0,uv0Varying.zw);
+	float4 c2=tex2D(Texture0,uv1Varying.xy);
+	float4 c3=tex2D(Texture0,uv1Varying.zw);
+	
+	float4 color=(c0+c1+c2+c3)*0.25;
+	color-=threshold;
+	return color;
+}
+

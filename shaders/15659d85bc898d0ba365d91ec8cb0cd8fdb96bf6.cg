@@ -1,0 +1,27 @@
+#define _ANDROID
+
+uniform float4 UserVSHParams[ 2 ];
+
+void main(
+	float3 Position,
+	float2 UV0,
+	float4 out uv0Varying : TEXCOORD0,
+	float4 out uv1Varying : TEXCOORD1,
+	float4 out uv2Varying : TEXCOORD2,
+	float4 out uv3Varying : TEXCOORD3,
+	float4 out gl_Position : POSITION
+) {
+    float4 uvOffsets      = UserVSHParams[ 0 ];
+    float4 zoomStrength   = UserVSHParams[ 1 ];
+
+    gl_Position = float4( Position, 1. );
+
+	uv0Varying.xy=UV0 * uvOffsets.xy + uvOffsets.zw;
+	float2 offset2 = ( 2. * uv0Varying.xy - 1. ) * zoomStrength.x;
+	float4 offset4 = float4(offset2,offset2)*2.0;
+	uv0Varying.zw = uv0Varying.xy+offset2;
+
+	uv1Varying=uv0Varying+offset4;
+	uv2Varying=uv1Varying+offset4;
+	uv3Varying=uv2Varying+offset4;
+}

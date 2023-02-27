@@ -1,0 +1,25 @@
+#define _ANDROID
+
+uniform float4x4 ModelViewProjMatrix;
+uniform float4 ConstantColor;
+uniform float4 PureDiffuseColor;
+uniform float4 VertexDenormalizationBox[2];
+uniform float4 MappingTransform;
+
+
+void main(
+	float3 Position,
+	float2 UV0,
+	float4 out colorVarying : COLOR,
+	float out uvCutoff : TEXCOORD0,
+	float4 out gl_Position : POSITION
+) {
+	float3 pos=VertexDenormalizationBox[0].xyz+Position*VertexDenormalizationBox[1].xyz;
+	gl_Position=mul(float4(pos,1),ModelViewProjMatrix);
+	float4 color=PureDiffuseColor;
+	color.w*=ConstantColor.w;
+
+    colorVarying=color;
+	float uvy=UV0.y*MappingTransform.y+MappingTransform.w;
+	uvCutoff=ConstantColor.x-uvy;
+}

@@ -1,0 +1,34 @@
+#define _ANDROID
+#define TEXTURE
+#define TEXTURE_ANIMATION
+
+
+#ifdef TEXTURE
+	uniform sampler2D Texture0;
+#endif
+
+#ifdef TEXTURE_ANIMATION
+	uniform float4 AnimatedTextureFrameFactor;
+#endif
+
+void main(
+	float4 colorVarying : COLOR,
+	float4 uv0Varying : TEXCOORD0,
+	float4 out gl_FragColor : COLOR
+) {
+	float4 color=colorVarying;
+#ifdef TEXTURE
+	float4 txt=tex2D(Texture0,uv0Varying.xy);
+	#ifdef TEXTURE_ANIMATION
+		float4 txt2=tex2D(Texture0,uv0Varying.zw);
+		txt=lerp(txt,txt2,AnimatedTextureFrameFactor.x);		
+	#endif
+
+	#ifdef ALPHA_ONLY_TEXTURE
+		color.w*=txt.w;
+	#else
+		color*=txt;
+	#endif
+#endif
+	gl_FragColor=color;
+}

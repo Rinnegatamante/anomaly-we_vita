@@ -1,0 +1,134 @@
+// profile sce_vp_psp2
+
+#define _ANDROID
+#define ENV_MAP
+#define FOG
+#define TWO_SIDED_LIGHTING
+
+#ifdef SKINNING
+
+#ifdef _ANDROID
+	uniform float4 BoneMatrices[3*12];
+#else
+	uniform float4 BoneMatrices[3*64];
+#endif
+
+#endif
+
+
+#ifdef PLANAR_LIGHTMAP
+	#endif
+
+uniform float4x4 ModelViewProjMatrix;
+#ifdef ENV_MAP
+		uniform float4 ObjectSpaceEyePosition;
+#endif
+uniform float4x4 ModelMatrix;
+
+#ifdef FOG
+	uniform float4 FogParams;
+	uniform float4 FogColor;
+	#ifdef ENV_MAP
+			#endif
+	#endif
+
+uniform float4 ConstantColor;
+uniform float4 VertexDenormalizationBox[2];
+uniform float4 MappingTransform;
+uniform float4 SunParams[3];
+uniform float4 SunDirection;
+uniform float4 ScreenColorRange[2];
+
+void main(
+	float4 BlendWeight,
+	float4 BlendIndices,
+	float3 Position,
+	float3 Normal,
+	float2 UV0,
+	float3 out colorVarying : COLOR,
+	float2 out uv0Varying : TEXCOORD0,
+	float2 out shadowMapUVVarying : TEXCOORD5,
+	float3 out reflectedVector : TEXCOORD4,
+	float3 out fogA : TEXCOORD6,
+	float3 out fogB : TEXCOORD7,
+	float4 out gl_Position : POSITION
+) {
+//	float3 pos=VertexDenormalizationBox[0].xyz+Position*VertexDenormalizationBox[1].xyz;
+	float3 pos=Position;
+	float3 nor=Normal;
+#ifdef SKINNING
+	float4 pos4In=float4(pos,1.0);
+	float3 nor3=nor;
+
+	#ifdef MULTI_BONE_SKINNING
+		int bix=int(BlendIndices.x);
+		int biy=int(BlendIndices.y);
+		int biz=int(BlendIndices.z);
+		int biw=int(BlendIndices.w);
+		float4 va=BoneMatrices[bix]*BlendWeight.x, vb=BoneMatrices[bix+1]*BlendWeight.x, vc=BoneMatrices[bix+2]*BlendWeight.x;
+		va+=BoneMatrices[biy]*BlendWeight.y;
+vb+=BoneMatrices[biy+1]*BlendWeight.y;
+vc+=BoneMatrices[biy+2]*BlendWeight.y;
+		va+=BoneMatrices[biz]*BlendWeight.z;
+vb+=BoneMatrices[biz+1]*BlendWeight.z;
+vc+=BoneMatrices[biz+2]*BlendWeight.z;
+		va+=BoneMatrices[biw]*BlendWeight.w;
+vb+=BoneMatrices[biw+1]*BlendWeight.w;
+vc+=BoneMatrices[biw+2]*BlendWeight.w;
+	#else
+		int bix=int(BlendIndices.x);
+		float4 va=BoneMatrices[bix], vb=BoneMatrices[bix+1], vc=BoneMatrices[bix+2];
+	#endif
+
+	pos=float3(dot(pos4In,va),dot(pos4In,vb),dot(pos4In,vc));
+	nor=float3(dot(nor3,va.xyz),dot(nor3,vb.xyz),dot(nor3,vc.xyz));
+#endif
+	float4 pos4=float4(pos,1);
+	gl_Position=mul(pos4,ModelViewProjMatrix);
+
+	float angleAtt=dot(nor,SunDirection.xyz);
+	#ifdef TWO_SIDED_LIGHTING
+		float2 factors=float2(angleAtt,-angleAtt);
+		factors=max(factors,float2(0.0,0.0));
+		float2 lowFactors=factors;
+		float3 diffuse=SunParams[0].xyz*lowFactors.x+SunParams[2].xyz*lowFactors.y+SunParams[1].xyz;
+	#else
+		float3 diffuse=SunParams[0].xyz*max(angleAtt,0.0)+SunParams[1].xyz;
+	#endif
+
+	float3 color=ConstantColor.xyz;
+	color*=diffuse;
+
+#if !defined(POSTPROCESSING_ENABLED) || defined(PLANAR_LIGHTMAP)
+	float2 screenUV=gl_Position.xy/(gl_Position.w*2.0)+float2(0.5,0.5);
+	#if !defined(POSTPROCESSING_ENABLED)
+		float scf=screenUV.x;
+		color*=lerp(ScreenColorRange[0].xyz,ScreenColorRange[1].xyz,scf);
+	#endif
+#endif
+
+	uv0Varying = UV0*MappingTransform.xy+MappingTransform.zw;
+#ifdef PLANAR_LIGHTMAP
+	shadowMapUVVarying=screenUV;
+#endif
+
+
+#ifdef ENV_MAP
+	float3 toEyeVector=pos-ObjectSpaceEyePosition.xyz;
+	float3 refl=reflect(toEyeVector,nor);
+	reflectedVector=(mul(float4(refl,0),ModelMatrix)).xyz;
+#endif
+
+#ifdef FOG
+	float f=dot(FogParams,pos4);
+	f=clamp(f,0.0,FogColor.w);
+	float omf=1.0-f;
+	fogB=FogColor.xyz*f;
+	#ifndef ENV_MAP
+		color*=omf;
+	#else
+		fogA=float3(omf,omf,omf);
+	#endif
+#endif
+    colorVarying=color;
+}

@@ -1,0 +1,13 @@
+#define _ANDROID
+
+void main(
+	float4 colorVarying : COLOR,
+	float uvCutoff : TEXCOORD0,
+	float4 out gl_FragColor : COLOR
+) {
+	float4 color=colorVarying;
+	if(uvCutoff<0.0)
+		discard;
+
+	gl_FragColor=color;
+}

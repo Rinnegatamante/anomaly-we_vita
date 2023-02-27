@@ -1,0 +1,7 @@
+#define _ANDROID
+
+float4 main(
+	float4 colorVarying : COLOR
+) {
+	return colorVarying;
+}

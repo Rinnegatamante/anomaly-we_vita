@@ -1,0 +1,58 @@
+// profile sce_fp_psp2
+
+#define _ANDROID
+
+#define BW    float3(0.2126, 0.7152, 0.0722)
+
+uniform sampler2D Texture0;
+uniform sampler2D Texture1;
+uniform float4 UserPSHParams[5];
+
+float4 main(
+#ifdef ZOOM_BLUR
+	float4 uv0Varying : TEXCOORD0,
+	float4 uv1Varying : TEXCOORD1,
+	float4 uv2Varying : TEXCOORD2,
+	float4 uv3Varying : TEXCOORD3,
+#else
+	float2 uv0Varying : TEXCOORD0,
+#endif
+	float3 screenColorVarying : COLOR) {
+	float4 gl_FragColor;
+
+#ifdef ZOOM_BLUR
+	#define SAMPLE_WEIGHT 0.125
+    float4 zoomBlurParams = UserPSHParams[4];
+	float sampleWeight=zoomBlurParams.x;
+
+	float3 mainSample = tex2D( Texture0, uv0Varying.xy ).xyz;
+	float3 color = mainSample*SAMPLE_WEIGHT;
+
+	color += tex2D(Texture0, uv0Varying.zw).xyz*SAMPLE_WEIGHT;
+	color += tex2D(Texture0, uv1Varying.xy).xyz*SAMPLE_WEIGHT;
+	color += tex2D(Texture0, uv1Varying.zw).xyz*SAMPLE_WEIGHT;
+	color += tex2D(Texture0, uv2Varying.xy).xyz*SAMPLE_WEIGHT;
+	color += tex2D(Texture0, uv2Varying.zw).xyz*SAMPLE_WEIGHT;
+	color += tex2D(Texture0, uv3Varying.xy).xyz*SAMPLE_WEIGHT;
+	color += tex2D(Texture0, uv3Varying.zw).xyz*SAMPLE_WEIGHT;
+
+	color = color * zoomBlurParams.x + mainSample * zoomBlurParams.y;
+#else
+	float3 color=tex2D(Texture0,uv0Varying.xy).xyz;
+#endif	
+
+#ifndef _ANDROID
+	float3 glow=tex2D(Texture1,uv0Varying.xy).xyz;
+	color=color*UserPSHParams[0].xyz+glow*UserPSHParams[1].xyz;
+#endif
+
+	float saturation=UserPSHParams[2].x;
+	float colorIntensity=dot(color,BW);
+	color=lerp(float3(colorIntensity,colorIntensity,colorIntensity),color,saturation);
+
+	color*=screenColorVarying;
+	color=lerp(color,color*color,UserPSHParams[3].xyz);
+	gl_FragColor.xyz=color;
+
+	return gl_FragColor;
+}

@@ -1,0 +1,17 @@
+// profile sce_fp_psp2
+
+#define _ANDROID
+
+uniform sampler2D Texture0;
+uniform sampler2D Texture1;
+
+float4 main(float2 uv0Varying : TEXCOORD0, float2 cloudUVvarying : TEXCOORD4) {
+	float4 gl_FragColor;
+
+	float4 shadow=tex2D(Texture0,uv0Varying);
+	float4 clouds=tex2D(Texture1,cloudUVvarying);
+	gl_FragColor=min(shadow,clouds);
+
+	return gl_FragColor;
+}
+

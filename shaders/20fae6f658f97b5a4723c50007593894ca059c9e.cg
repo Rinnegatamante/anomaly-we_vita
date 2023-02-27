@@ -1,0 +1,35 @@
+// profile sce_fp_psp2
+
+#define _ANDROID
+#define BLEND_ALPHA
+#define TEXTURE_FRAME_INTERPOLATION
+
+#ifdef TEXTURE_FRAME_INTERPOLATION
+	#endif
+#ifdef TEXTURE_DESATURATION
+	uniform float4 UserPSHParams[2];
+#endif
+uniform sampler2D Texture0;
+
+float4 main(float4 colorVarying : COLOR, float4 uv : TEXCOORD0, float frameFactor : TEXCOORD1) {
+	float4 gl_FragColor;
+
+	float4 color=colorVarying;
+
+	float4 txt=tex2D(Texture0,uv.xy);
+#ifdef TEXTURE_FRAME_INTERPOLATION
+	float4 txt2=tex2D(Texture0,uv.zw);
+	txt=lerp(txt,txt2,frameFactor);
+#endif
+
+#ifdef TEXTURE_DESATURATION
+	float lum=dot(txt.xyz,UserPSHParams[1].xyz);
+	float3 lum3=float3(lum,lum,lum);
+	txt.xyz=txt.xyz*UserPSHParams[0].xyz+lum3;
+#endif
+
+	color*=txt;
+	gl_FragColor=color;
+
+	return gl_FragColor;
+}

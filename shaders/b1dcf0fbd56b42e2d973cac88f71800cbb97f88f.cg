@@ -1,0 +1,23 @@
+#define _ANDROID
+#define TEXTURE
+
+#ifdef TEXTURE
+	uniform sampler2D Texture0;
+#endif
+
+float4 main(
+	float4 uv0Varying : TEXCOORD0,
+	float4 colorVarying : COLOR
+) {
+	float4 color=colorVarying;
+#ifdef TEXTURE
+	float4 txt=tex2D(Texture0,uv0Varying.xy);
+
+	#ifdef ALPHA_ONLY_TEXTURE
+		color.w*=txt.w;
+	#else
+		color*=txt;
+	#endif
+#endif
+	return color;
+}

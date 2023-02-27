@@ -1,0 +1,16 @@
+// profile sce_fp_psp2
+
+#define _ANDROID
+
+uniform sampler2D Texture0;
+uniform float4 ConstantColor;
+
+float4 main(float2 uv0Varying : TEXCOORD0) {
+	float4 gl_FragColor;
+
+	float4 s=tex2D(Texture0,uv0Varying);
+	gl_FragColor=1.0-s*ConstantColor;
+
+	return gl_FragColor;
+}
+

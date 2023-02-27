@@ -1,0 +1,23 @@
+// profile sce_fp_psp2
+
+#define _ANDROID
+
+uniform sampler2D Texture0;
+uniform float4 UserPSHParams[2];
+
+float4 main(float4 uv0Varying : TEXCOORD0) {
+	float4 gl_FragColor;
+
+	float4 txt=tex2D(Texture0,uv0Varying.xy);
+
+	float signal=(1.0-abs(uv0Varying.z));
+	signal=max(0.0,signal);
+	signal*=signal;
+
+	float4 color=lerp(UserPSHParams[0],UserPSHParams[1],signal);
+	color*=txt;
+
+	gl_FragColor=color;
+
+	return gl_FragColor;
+}

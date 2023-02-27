@@ -1,0 +1,19 @@
+// profile sce_vp_psp2
+
+#define _ANDROID
+
+
+
+uniform float4x4 ModelViewProjMatrix;
+uniform float4 MappingScale;
+uniform float4 UserVSHParams[1];
+
+void main(
+	float3 Position,
+	float2 UV0,
+	float4 out uv0Varying : TEXCOORD0,
+	float4 out gl_Position : POSITION
+) {
+    gl_Position = mul(float4(Position,1),ModelViewProjMatrix);
+	uv0Varying = float4(UV0*MappingScale.xy,0.1*(UV0.x-UserVSHParams[0].x),0);
+}

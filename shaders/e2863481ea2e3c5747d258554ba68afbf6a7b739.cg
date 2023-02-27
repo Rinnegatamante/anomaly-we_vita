@@ -1,0 +1,102 @@
+#define _ANDROID
+#define SOFTNESS
+#define VELOCITY_ALIGN
+
+
+uniform float4x4 ModelViewProjMatrix;
+uniform float4 ConstantColor;
+uniform float4 UserVSHParams[12];
+uniform float4 BoneMatrices[4];
+
+void main(
+	float4 Position,
+	float3 Normal,
+	float4 BlendWeight,
+	float4 BlendIndices,
+	float4 out colorVarying : COLOR,
+	float4 out uv : TEXCOORD0,
+	float out frameFactor : TEXCOORD1,
+	float4 out gl_Position : POSITION
+) {
+	float3 pos=Position.xyz;
+	float4 sizeVector=UserVSHParams[5];
+	float4 anchorAndRotationSpeedVector=UserVSHParams[6];
+	float4 shapeVector=UserVSHParams[7];
+	float4 timeVector=UserVSHParams[0];
+	float4 textureScalingVector=UserVSHParams[8];
+	 float4 ooNodeTimeStepVector=UserVSHParams[9];
+
+	 float2 ind=step(timeVector.yz,Position.ww);
+	 int node=int(ind.x+ind.y);
+
+	 float factor=clamp((Position.w-timeVector[node])*ooNodeTimeStepVector[node],0.0,1.0);
+	
+	 float4 c1=BoneMatrices[node];			// color variables have been moved to BoneMatrices register due to ipad2 glsl crash
+	 float4 c2=BoneMatrices[node+1];
+	
+	 float4 color=lerp(c1,c2,factor);
+	 float size=lerp(sizeVector[node],sizeVector[node+1],factor);
+	
+	 float2 billboardSize=(BlendWeight.xy-anchorAndRotationSpeedVector.xy)*size;
+	billboardSize*=lerp(shapeVector.xy,shapeVector.zw,BlendIndices.x);
+
+#ifdef VELOCITY_NORMAL
+	 float3 up=float3(-0.0124,1,0.131);
+	 float3 b1=normalize(cross(Normal,up));
+	 float3 b2=normalize(cross(Normal,b1));
+#elif defined(VELOCITY_ALIGN)
+	 float3 b2=-normalize(Normal);
+	 float3 b1=normalize(cross(pos-UserVSHParams[10].xyz,b2));
+#else
+	 float3 b1=UserVSHParams[10].xyz;
+	 float3 b2=UserVSHParams[11].xyz;
+#endif	
+	
+#ifdef ROTATION
+	 float ang=(BlendIndices.y*2.0*3.141+lerp(anchorAndRotationSpeedVector.z,anchorAndRotationSpeedVector.w,BlendIndices.z)*Position.w);
+	 float4 sc;
+	sc.x=sin(ang);
+	sc.y=cos(ang);
+	sc.zw=sc.xy*float2(-1,-1);
+	billboardSize=billboardSize.xy*sc.yy + billboardSize.yx*sc.xz;
+#endif
+	
+	
+	pos+=b1*billboardSize.x+b2*billboardSize.y;
+    gl_Position = mul(float4(pos,1),ModelViewProjMatrix);
+	colorVarying=color*ConstantColor;
+
+#ifdef TEXTURE_ANIMATION
+	#ifdef RANDOM_TEXTURE_FRAME
+		 float frameFloat=BlendIndices.w;
+	#else
+		 float frameFloat=Position.w;
+	#endif
+	frameFloat*=textureScalingVector.z;
+	 float2 frameNo;
+	#ifdef TEXTURE_FRAME_INTERPOLATION
+		frameNo.x=floor(frameFloat);
+		frameFactor=frameFloat-frameNo.x;
+//		frameFactor=mod(frameFloat,frameNo.x);
+		frameNo.y=min(frameNo.x+1.0,textureScalingVector.z-1.0);
+	#else
+		frameNo.xy=floor(float2(frameFloat,frameFloat));
+//		mod(float2(frameFloat,frameFloat),frameNo.xy);
+	#endif
+
+	 float4 frameIndex;
+	
+	 float2 tmp=textureScalingVector.xx*frameNo;
+	frameIndex.yw=floor(tmp);
+	frameIndex.xz=tmp-frameIndex.yw;
+	
+	//frameIndex.xz=mod(textureScalingVector.xx*frameNo,frameIndex.yw);
+	
+	frameIndex.xz=floor(frameIndex.xz*textureScalingVector.ww);
+	
+//	mod(frameIndex.xz*textureScalingVector.ww,frameIndex.xz);
+	uv=(BlendWeight.xyxy+frameIndex)*textureScalingVector.xyxy;
+#else
+	uv=BlendWeight.xyxy;
+#endif	
+}

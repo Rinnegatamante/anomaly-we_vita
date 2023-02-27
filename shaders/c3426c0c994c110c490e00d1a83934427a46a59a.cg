@@ -1,0 +1,23 @@
+#define _ANDROID
+
+uniform float4 UserVSHParams[3];
+
+void main(
+	float3 Position,
+	float2 UV0,
+	float2 out uv0Varying : TEXCOORD0,
+	float4 out uv1Varying : TEXCOORD1,
+	float4 out uv2Varying : TEXCOORD2,
+	float4 out uv3Varying : TEXCOORD3,
+	float4 out gl_Position : POSITION
+) {
+	float3 pos=Position;
+
+    gl_Position = float4(pos,1);
+
+	float4 uv=float4(UV0,UV0);
+	uv0Varying=UV0;
+	uv1Varying=uv+UserVSHParams[0];
+	uv2Varying=uv+UserVSHParams[1];
+	uv3Varying=uv+UserVSHParams[2];
+}

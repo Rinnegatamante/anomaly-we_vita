@@ -1,0 +1,33 @@
+// profile sce_vp_psp2
+
+#define _ANDROID
+#define HEALTHBAR_MODE
+
+
+
+#if defined(PROGRESS_MODE) || defined(HEALTHBAR_MODE)
+	#endif
+
+uniform float4x4 ModelViewProjMatrix;
+
+void main(
+	float3 Position,
+	float2 UV0,
+	float4 UV1,
+	float4 Color,
+	float4 out colorVarying : COLOR,
+	float2 out uv0Varying : TEXCOORD0,
+	float out progressVarying : TEXCOORD8,
+	float4 out gl_Position : POSITION
+) {
+	float3 pos=Position;
+    gl_Position = mul(float4(pos,1),ModelViewProjMatrix);
+	uv0Varying = UV0;
+    colorVarying = Color;
+
+	#ifdef PROGRESS_MODE
+		progressVarying=UV0.y-UV1.x;
+	#elif defined(HEALTHBAR_MODE)
+		progressVarying=UV1.x-UV0.x;
+	#endif
+}
