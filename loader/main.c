@@ -70,7 +70,7 @@ void *__wrap_memset(void *s, int c, size_t n) {
 }
 
 int debugPrintf(char *text, ...) {
-//#ifdef DEBUG
+#ifdef DEBUG
 	va_list list;
 	static char string[0x8000];
 
@@ -79,12 +79,12 @@ int debugPrintf(char *text, ...) {
 	va_end(list);
 
 	printf(string);
-//#endif
+#endif
 	return 0;
 }
 
 int __android_log_print(int prio, const char *tag, const char *fmt, ...) {
-//#ifdef DEBUG
+#ifdef DEBUG
 	va_list list;
 	static char string[0x8000];
 
@@ -93,14 +93,14 @@ int __android_log_print(int prio, const char *tag, const char *fmt, ...) {
 	va_end(list);
 
 	debugPrintf("[LOG] %s: %s\n", tag, string);
-//#endif
+#endif
 	return 0;
 }
 
 int __android_log_write(int prio, const char *tag, const char *text) {
-//#ifdef DEBUG
+#ifdef DEBUG
 	 printf("[LOG] %s: %s\n", tag, text);
-//#endif
+#endif
 	return 0;
 }
 
@@ -752,10 +752,9 @@ void glShaderSource_hook(GLuint shader, GLsizei count, const GLchar **string, co
 	snprintf(sha_name, sizeof(sha_name), "%08x%08x%08x%08x%08x", sha1[0], sha1[1], sha1[2], sha1[3], sha1[4]);
 
 	char cg_path[128];
-	snprintf(cg_path, sizeof(cg_path), "app0:/shaders/%s.cg", sha_name);
+	snprintf(cg_path, sizeof(cg_path), "app0:/shaders/%s.cg.gxp", sha_name);
 
 	FILE *file = fopen(cg_path, "rb");
-	printf("Shader: %s\n", sha_name);
 	if (!file) {
 		snprintf(cg_path, sizeof(cg_path), "ux0:data/anomaly/%s.glsl", sha_name);
 		file = fopen(cg_path, "wb");
@@ -764,9 +763,9 @@ void glShaderSource_hook(GLuint shader, GLsizei count, const GLchar **string, co
 		}
 		fclose(file);
 		if (strstr(string[1], "gl_FragColor"))
-			file = fopen("app0:/shaders/024af586cd82eb776a818e96dc6c43e88acc6882.cg", "rb");
+			file = fopen("app0:/shaders/024af586cd82eb776a818e96dc6c43e88acc6882.cg.gxp", "rb");
 		else
-			file = fopen("app0:/shaders/9f6320ad76145c22f135664c66a8ab4caeecbdbc.cg", "rb");
+			file = fopen("app0:/shaders/9f6320ad76145c22f135664c66a8ab4caeecbdbc.cg.gxp", "rb");
 	}
 		
 	fseek(file, 0, SEEK_END);
@@ -776,8 +775,12 @@ void glShaderSource_hook(GLuint shader, GLsizei count, const GLchar **string, co
 	fread(buf, 1, size, file);
 	fclose(file);
 	buf[size] = 0;
-	glShaderSource(shader, 1, &buf, NULL);
+	glShaderBinary(1, &shader, 0, buf, size);
+	//glShaderSource(shader, 1, &buf, NULL);
 	free(buf);
+}
+
+void glCompileShader_hook(GLuint prog) {	
 }
 
 int usleep_hook(useconds_t usec) {
@@ -966,7 +969,7 @@ static so_default_dynlib default_dynlib[] = {
 	{ "glClearDepthf", (uintptr_t)&glClearDepthf },
 	{ "glClearStencil", (uintptr_t)&glClearStencil },
 	{ "glColorMask", (uintptr_t)&glColorMask },
-	{ "glCompileShader", (uintptr_t)&glCompileShader },
+	{ "glCompileShader", (uintptr_t)&glCompileShader_hook },
 	{ "glCompressedTexImage2D", (uintptr_t)&glCompressedTexImage2DHook },
 	{ "glCreateProgram", (uintptr_t)&glCreateProgram },
 	{ "glCreateShader", (uintptr_t)&glCreateShader },

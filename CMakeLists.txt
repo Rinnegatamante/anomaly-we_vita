@@ -68,7 +68,7 @@ vita_create_vpk(anomaly.vpk ${VITA_TITLEID} eboot.bin
   FILE ${CMAKE_SOURCE_DIR}/livearea/icon0.png sce_sys/icon0.png
        ${CMAKE_SOURCE_DIR}/livearea/bg.png sce_sys/livearea/contents/bg.png
        ${CMAKE_SOURCE_DIR}/livearea/template.xml sce_sys/livearea/contents/template.xml
-       ${CMAKE_SOURCE_DIR}/shaders shaders
+       ${CMAKE_SOURCE_DIR}/compiled_shaders shaders
 )
 
 add_custom_target(copy
