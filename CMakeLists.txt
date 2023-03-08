@@ -61,6 +61,31 @@ target_link_libraries(anomaly
   SceVshBridge_stub
 )
 
+add_executable(companion
+  companion/main.cpp
+)
+
+target_link_libraries(companion
+  imgui
+  vitaGL
+  vitashark
+  SceShaccCgExt
+  taihen_stub
+  mathneon
+  SceAppMgr_stub
+  SceAudio_stub
+  SceCtrl_stub
+  SceCommonDialog_stub
+  SceDisplay_stub
+  SceGxm_stub
+  SceShaccCg_stub
+  SceSysmodule_stub
+  SceTouch_stub
+  SceKernelDmacMgr_stub
+)
+
+vita_create_self(companion.bin companion UNSAFE)
+
 vita_create_self(eboot.bin anomaly UNSAFE)
 vita_create_vpk(anomaly.vpk ${VITA_TITLEID} eboot.bin
   VERSION ${VITA_VERSION}
@@ -69,6 +94,8 @@ vita_create_vpk(anomaly.vpk ${VITA_TITLEID} eboot.bin
        ${CMAKE_SOURCE_DIR}/livearea/bg.png sce_sys/livearea/contents/bg.png
        ${CMAKE_SOURCE_DIR}/livearea/template.xml sce_sys/livearea/contents/template.xml
        ${CMAKE_SOURCE_DIR}/compiled_shaders shaders
+       ${CMAKE_SOURCE_DIR}/antialiasing antialiasing
+       ${CMAKE_BINARY_DIR}/companion.bin companion.bin
 )
 
 add_custom_target(copy

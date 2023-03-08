@@ -45,6 +45,26 @@ extern const char *BIONIC_ctype_;
 extern const short *BIONIC_tolower_tab_;
 extern const short *BIONIC_toupper_tab_;
 
+#define CONFIG_FILE_PATH "ux0:data/anomaly/settings.cfg"
+
+int antialiasing = 2;
+int framecap = 0;
+
+void loadConfig(void) {
+	char buffer[30];
+	int value;
+
+	FILE *config = fopen(CONFIG_FILE_PATH, "r");
+
+	if (config) {
+		while (EOF != fscanf(config, "%[^ ] %d\n", buffer, &value)) {
+			if (strcmp("antialiasing", buffer) == 0) antialiasing = value;
+			else if (strcmp("framecap", buffer) == 0) framecap = value;
+		}
+		fclose(config);
+	}
+}
+
 int pstv_mode = 0;
 int enable_dlcs = 0;
 
@@ -763,9 +783,9 @@ void glShaderSource_hook(GLuint shader, GLsizei count, const GLchar **string, co
 		}
 		fclose(file);
 		if (strstr(string[1], "gl_FragColor"))
-			file = fopen("app0:/shaders/024af586cd82eb776a818e96dc6c43e88acc6882.cg.gxp", "rb");
+			file = fopen("app0:/shaders/0e115697d9c3a2309beb327e0076171294f46a58.cg.gxp", "rb");
 		else
-			file = fopen("app0:/shaders/9f6320ad76145c22f135664c66a8ab4caeecbdbc.cg.gxp", "rb");
+			file = fopen("app0:/shaders/4adddbf38f726961e0f903f8f73510e7ae6881a8.cg.gxp", "rb");
 	}
 		
 	fseek(file, 0, SEEK_END);
@@ -1371,6 +1391,18 @@ extern int YYVideoDraw();
 extern void YYVideoStop();
 
 int main(int argc, char *argv[]) {
+	// Check if we want to start the companion app
+	sceAppUtilInit(&(SceAppUtilInitParam){}, &(SceAppUtilBootParam){});
+	SceAppUtilAppEventParam eventParam;
+	sceClibMemset(&eventParam, 0, sizeof(SceAppUtilAppEventParam));
+	sceAppUtilReceiveAppEvent(&eventParam);
+	if (eventParam.type == 0x05) {
+		char buffer[2048];
+		sceAppUtilAppEventParseLiveArea(&eventParam, buffer);
+		if (strstr(buffer, "test"))
+			sceAppMgrLoadExec("app0:/companion.bin", NULL, NULL);
+	}
+	
 	//sceSysmoduleLoadModule(SCE_SYSMODULE_RAZOR_CAPTURE);
 	sceTouchSetSamplingState(SCE_TOUCH_PORT_FRONT, SCE_TOUCH_SAMPLING_STATE_START);
 
@@ -1378,6 +1410,9 @@ int main(int argc, char *argv[]) {
 	scePowerSetBusClockFrequency(222);
 	scePowerSetGpuClockFrequency(222);
 	scePowerSetGpuXbarClockFrequency(166);
+	
+	loadConfig();
+	eglSwapInterval(0, framecap ? 2 : 1);
 
 	if (check_kubridge() < 0)
 		fatal_error("Error kubridge.skprx is not installed.");
@@ -1398,7 +1433,17 @@ int main(int argc, char *argv[]) {
 
 	vglSetupRuntimeShaderCompiler(SHARK_OPT_UNSAFE, SHARK_ENABLE, SHARK_ENABLE, SHARK_ENABLE);
 	vglSetupGarbageCollector(127, 0x20000);
-	vglInitExtended(0, SCREEN_W, SCREEN_H, MEMORY_VITAGL_THRESHOLD_MB * 1024 * 1024, SCE_GXM_MULTISAMPLE_4X);
+	switch (antialiasing) {
+	case 0:
+		vglInitExtended(0, SCREEN_W, SCREEN_H, MEMORY_VITAGL_THRESHOLD_MB * 1024 * 1024, SCE_GXM_MULTISAMPLE_NONE);
+		break;
+	case 1:
+		vglInitExtended(0, SCREEN_W, SCREEN_H, MEMORY_VITAGL_THRESHOLD_MB * 1024 * 1024, SCE_GXM_MULTISAMPLE_2X);
+		break;
+	default:
+		vglInitExtended(0, SCREEN_W, SCREEN_H, MEMORY_VITAGL_THRESHOLD_MB * 1024 * 1024, SCE_GXM_MULTISAMPLE_4X);
+		break;
+	}
 
 	// Playing the intro video if present)
 	SceIoStat st1;
