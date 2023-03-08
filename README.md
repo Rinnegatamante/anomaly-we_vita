@@ -12,6 +12,14 @@ This wrapper has been tested only with v.1.12 since it's the last version not fe
 
 ## Changelog
 
+### v.1.2
+
+- Added configurable settings and related configurator app (Anti-Aliasing, Framecap).
+- Bound Start to pause game.
+- Bound L Trigger to mission goals showup.
+- Bound R Trigger to fast forward.
+- Reworked Livearea assets (Thanks to Once13one).
+
 ### v.1.1
 
 - Moved to precompiled shaders usage. Makes loading times much faster.
@@ -91,3 +99,4 @@ cmake .. && make
 
 - CatoTheYounger for the screenshots and for testing the homebrew.
 - gl33ntwine for helping dealing with partial automatization of shaders translation.
+- Once13one for the Livearea assets.

@@ -90,7 +90,7 @@ void *__wrap_memset(void *s, int c, size_t n) {
 }
 
 int debugPrintf(char *text, ...) {
-#ifdef DEBUG
+#ifdef ENABLE_DEBUG
 	va_list list;
 	static char string[0x8000];
 
@@ -104,7 +104,7 @@ int debugPrintf(char *text, ...) {
 }
 
 int __android_log_print(int prio, const char *tag, const char *fmt, ...) {
-#ifdef DEBUG
+#ifdef ENABLE_DEBUG
 	va_list list;
 	static char string[0x8000];
 
@@ -118,7 +118,7 @@ int __android_log_print(int prio, const char *tag, const char *fmt, ...) {
 }
 
 int __android_log_write(int prio, const char *tag, const char *text) {
-#ifdef DEBUG
+#ifdef ENABLE_DEBUG
 	 printf("[LOG] %s: %s\n", tag, text);
 #endif
 	return 0;
@@ -481,10 +481,10 @@ void _sync_synchronize() {
 FILE *OpenJetFile(char *fname, char *mode) {
 	FILE *f;
 	char real_fname[256];
-	printf("OpenJetFile(%s)\n", fname);
+	//printf("OpenJetFile(%s)\n", fname);
 	if (strncmp(fname, "ux0:", 4)) {
 		sprintf(real_fname, "%s/assets%s.jet", DATA_PATH, fname);
-		printf("Resolved to %s\n", real_fname);
+		//printf("Resolved to %s\n", real_fname);
 		f = fopen(real_fname, "rb");
 	} else {
 		f = fopen(fname, "rb");
@@ -493,7 +493,7 @@ FILE *OpenJetFile(char *fname, char *mode) {
 }
 
 int GameConsolePrint(void *this, int a1, int a2, char *text, ...) {
-	//#ifdef DEBUG
+	//#ifdef ENABLE_DEBUG
 	va_list list;
 	static char string[0x8000];
 

@@ -91,7 +91,10 @@ vita_create_vpk(anomaly.vpk ${VITA_TITLEID} eboot.bin
   VERSION ${VITA_VERSION}
   NAME ${VITA_APP_NAME}
   FILE ${CMAKE_SOURCE_DIR}/livearea/icon0.png sce_sys/icon0.png
-       ${CMAKE_SOURCE_DIR}/livearea/bg.png sce_sys/livearea/contents/bg.png
+       ${CMAKE_SOURCE_DIR}/livearea/pic0.png sce_sys/pic0.png
+       ${CMAKE_SOURCE_DIR}/livearea/bg0.png sce_sys/livearea/contents/bg0.png
+       ${CMAKE_SOURCE_DIR}/livearea/earth.png sce_sys/livearea/contents/earth.png
+       ${CMAKE_SOURCE_DIR}/livearea/conf.png sce_sys/livearea/contents/conf.png
        ${CMAKE_SOURCE_DIR}/livearea/template.xml sce_sys/livearea/contents/template.xml
        ${CMAKE_SOURCE_DIR}/compiled_shaders shaders
        ${CMAKE_SOURCE_DIR}/antialiasing antialiasing
