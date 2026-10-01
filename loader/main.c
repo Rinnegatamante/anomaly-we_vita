@@ -132,7 +132,7 @@ int ret1(void) {
 	return 1;
 }
 
-int clock_gettime(int clk_ik, struct timespec *t) {
+int clock_gettime(clockid_t clk_ik, struct timespec *t) {
 	struct timeval now;
 	int rv = gettimeofday(&now, NULL);
 	if (rv)
@@ -172,7 +172,7 @@ int pthread_mutexattr_settype_fake(pthread_mutexattr_t **m, int type) {
 	return 0;
 }
 
-int pthread_mutex_init_fake(pthread_mutex_t **uid, const pthread_mutexattr_t **mutexattr) {
+int pthread_mutex_init_fake(pthread_mutex_t **uid, pthread_mutexattr_t *const *mutexattr) {
 	pthread_mutex_t *m = calloc(1, sizeof(pthread_mutex_t));
 	if (!m)
 		return -1;
@@ -202,13 +202,13 @@ int pthread_mutex_lock_fake(pthread_mutex_t **uid) {
 	if (!*uid) {
 		ret = pthread_mutex_init_fake(uid, NULL);
 	} else if ((uintptr_t)*uid == 0x4000) {
-		pthread_mutexattr_t attr;
+		pthread_mutexattr_t *attr;
 		pthread_mutexattr_init_fake(&attr);
 		pthread_mutexattr_settype_fake(&attr, PTHREAD_MUTEX_RECURSIVE);
 		ret = pthread_mutex_init_fake(uid, &attr);
 		pthread_mutexattr_destroy_fake(&attr);
 	} else if ((uintptr_t)*uid == 0x8000) {
-		pthread_mutexattr_t attr;
+		pthread_mutexattr_t *attr;
 		pthread_mutexattr_init_fake(&attr);
 		pthread_mutexattr_settype_fake(&attr, PTHREAD_MUTEX_ERRORCHECK);
 		ret = pthread_mutex_init_fake(uid, &attr);
@@ -224,13 +224,13 @@ int pthread_mutex_unlock_fake(pthread_mutex_t **uid) {
 	if (!*uid) {
 		ret = pthread_mutex_init_fake(uid, NULL);
 	} else if ((uintptr_t)*uid == 0x4000) {
-		pthread_mutexattr_t attr;
+		pthread_mutexattr_t *attr;
 		pthread_mutexattr_init_fake(&attr);
 		pthread_mutexattr_settype_fake(&attr, PTHREAD_MUTEX_RECURSIVE);
 		ret = pthread_mutex_init_fake(uid, &attr);
 		pthread_mutexattr_destroy_fake(&attr);
 	} else if ((uintptr_t)*uid == 0x8000) {
-		pthread_mutexattr_t attr;
+		pthread_mutexattr_t *attr;
 		pthread_mutexattr_init_fake(&attr);
 		pthread_mutexattr_settype_fake(&attr, PTHREAD_MUTEX_ERRORCHECK);
 		ret = pthread_mutex_init_fake(uid, &attr);
@@ -313,13 +313,13 @@ int pthread_mutex_trylock_fake(pthread_mutex_t **uid) {
 		pthread_mutexattr_t attr;
 		pthread_mutexattr_init(&attr);
 		pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-		ret = pthread_mutex_init_fake(uid, &attr);
+		ret = pthread_mutex_init_fake(uid, (pthread_mutexattr_t *const *)&attr);
 		pthread_mutexattr_destroy(&attr);
 	} else if ((uintptr_t)*uid == 0x8000) {
 		pthread_mutexattr_t attr;
 		pthread_mutexattr_init(&attr);
 		pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
-		ret = pthread_mutex_init_fake(uid, &attr);
+		ret = pthread_mutex_init_fake(uid, (pthread_mutexattr_t *const *)&attr);
 		pthread_mutexattr_destroy(&attr);
 	}
 	if (ret < 0)
@@ -507,10 +507,10 @@ int GameConsolePrint(void *this, int a1, int a2, char *text, ...) {
 }
 
 void *SendRequestServer(const char *a1, int a2, int *res) {
-	void *(*NameStringGen)(void *this, char *text) = so_symbol(&funky_mod, "_ZN10NameStringC1EPKc");
-	int (*NameStringSet)(void *this, void *text) = so_symbol(&funky_mod, "_ZN10NameString3SetERKS_");
+	void *(*NameStringGen)(void *this, char *text) = (void *(*)(void *, char *))so_symbol(&funky_mod, "_ZN10NameStringC1EPKc");
+	int (*NameStringSet)(void *this, void *text) = (int (*)(void *, void *))so_symbol(&funky_mod, "_ZN10NameString3SetERKS_");
 	NameStringGen(a1, 0);
-	NameStringSet(a1, (uintptr_t)funky_mod.text_base + 0x442D0C);
+	NameStringSet(a1, (void *)((uintptr_t)funky_mod.text_base + 0x442D0C));
 	printf("SendRequestToServer\n");
 	*res = 1;
 	return a1;

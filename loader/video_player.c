@@ -1,11 +1,12 @@
 #include <vitasdk.h>
 #include <vitaGL.h>
 #include <stdio.h>
+#include <string.h>
 #include <malloc.h>
 
 #include "main.h"
 #include "so_util.h"
-#include "unzip.h"
+#include <minizip/unzip.h>
 
 #include "shaders/movie_f.h"
 #include "shaders/movie_v.h"
@@ -69,7 +70,7 @@ void *gpu_alloc(void *p, uint32_t align, uint32_t size) {
 		align = FB_ALIGNMENT;
 	}
 	size = ALIGN_MEM(size, align);
-	return vglAlloc(size, VGL_MEM_SLOW);
+	return vglAlloc(size, VGL_MEM_PHYCONT);
 }
 
 void gpu_free(void *p, void *ptr) {
